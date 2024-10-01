@@ -25,6 +25,43 @@ if (fs.existsSync('Userdb.json')) {
   db = JSON.parse(data);
 }
 
+const GITHUB_TOKEN = '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'; // Replace with your GitHub token
+const GITHUB_REPO = 'CosmosElement77/Weather-App'; // Replace with your GitHub username and repository name
+const GITHUB_FILE_PATH = 'Userdb.json'; // Path to the file in the repository
+
+async function updateGitHubFile(content) {
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`;
+
+    let sha;
+    try {
+        const response = await axios.get(url, {
+            headers: {
+                Authorization: `token ${GITHUB_TOKEN}`,
+                Accept: 'application/vnd.github.v3+json',
+            }
+        });
+        sha = response.data.sha; // Get the SHA of the current file
+    } catch (error) {
+        console.error("Error fetching file SHA:", error.message);
+        return;
+    }
+    const data = {
+        message: "Update UserDb.json",
+        content: Buffer.from(content).toString('base64'),
+        sha: sha,
+    };
+    try {
+        await axios.put(url, data, {
+            headers: {
+                Authorization: `token ${GITHUB_TOKEN}`,
+                Accept: 'application/vnd.github.v3+json',
+            }
+        });
+        console.log("File updated successfully on GitHub.");
+    } catch (error) {
+        console.error("Error updating file on GitHub:", error.message);
+    }
+}
 app.get("/home", (req, res) => {
   const username = req.session.username;
   console.log("Meow "+username);
@@ -51,32 +88,64 @@ app.post("/", (req, res, next) => {
   };
   // Add user to database
   db.push(user);
-  fs.writeFile("Userdb.json", JSON.stringify(db), (err) => {
+  fs.writeFile("Userdb.json", JSON.stringify(db), async(err) => {
       if (err) {return next(err); } 
-      else {res.redirect("login");}
+      else {
+        await updateGitHubFile(JSON.stringify(db));
+        res.redirect("login");}
   });
 });
 
 /////////////////////////////////////////////////////////////////////////
+
 app.get("/login", (req, res) => {
   res.render("login", { weather: null, error: null });
 });
-app.post("/login", (req, res) => {
-  let { username, password } = req.body;
-  
-  if (!username || !password) {
-      return res.status(400).send("All fields are required.");
-  }
-  // Check for existing user
-  const foundUser = db.find(user => user.username === username && user.password === password);
 
-  if (foundUser) {
-    // res.render("index", { weather: null, error: null , username: foundUser.username});
-    req.session.username = foundUser.username;
-    res.redirect("/home");
-  } else {
-      res.status(401).send("Invalid credentials. Please try again.");
-  }
+const GITHUB_TOK = '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'; // Replace with your GitHub token
+const GITHUB_REP = 'CosmosElement77/Weather-App'; // Replace with your GitHub username and repository name
+const GITHUB_FILE_PAT = 'Userdb.json'; // Path to the file in the repository
+
+async function getUserDb() {
+    const url = `https://api.github.com/repos/${GITHUB_REP}/contents/${GITHUB_FILE_PAT}`;
+    
+    try {
+        const response = await axios.get(url, {
+            headers: {
+                Authorization: `token ${GITHUB_TOK}`,
+                Accept: 'application/vnd.github.v3+json',
+            }
+        });
+        const content = Buffer.from(response.data.content, 'base64').toString('utf-8');
+        return JSON.parse(content); // Parse JSON content
+    } catch (error) {
+        console.error("Error fetching UserDb.json:", error.message);
+        return null;
+    }
+}
+
+// Example usage
+app.post("/login", async (req, res) => {
+    let { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).send("All fields are required.");
+    }
+
+    const db = await getUserDb(); // Fetch the user database from GitHub
+
+    if (db) {
+        const foundUser = db.find(user => user.username === username && user.password === password);
+        
+        if (foundUser) {
+            req.session.username = foundUser.username;
+            res.redirect("/home");
+        } else {
+            res.status(401).send("Invalid credentials. Please try again.");
+        }
+    } else {
+        res.status(500).send("Could not access user database.");
+    }
 });
 
 /////////////////////////////////////////////////////////////////////////
