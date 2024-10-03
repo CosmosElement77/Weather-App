@@ -4,7 +4,9 @@ const axios = require("axios");
 const app = express();
 const fs = require("fs");
 let db = [];
-const GITHUB_TOKEN = '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'; // Replace with your GitHub token
+let notifier = require('node-notifier');
+require('dotenv').config();
+const GITHUB_TOKEN = process.env.Github_token; // Replace with your GitHub token
 const GITHUB_REPO = 'CosmosElement77/Weather-App'; // Replace with your GitHub username and repository name
 const GITHUB_FILE_PATH = 'Userdb.json'; // Path to the file in the repository
 
@@ -57,6 +59,7 @@ async function updateGitHubFile(content) {
             }
         });
         console.log("File updated successfully on GitHub.");
+        notifier.notify({title: "Registration Successful", message: "You have successfully registered."});
     } catch (error) {
         console.error("Error updating file on GitHub:", error.message);
     }
