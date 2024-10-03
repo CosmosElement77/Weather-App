@@ -6,7 +6,8 @@ const fs = require("fs");
 let db = [];
 let notifier = require('node-notifier');
 require('dotenv').config();
-const GITHUB_TOKEN = process.env.Githb_Token; // Replace with your GitHub token
+// const GITHUB_TOKEN = process.env.Githb_Token; 
+const GITHUB_TOKEN = 'Githb_Token = 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';
 const GITHUB_REPO = 'CosmosElement77/Weather-App'; // Replace with your GitHub username and repository name
 const GITHUB_FILE_PATH = 'Userdb.json'; // Path to the file in the repository
 
