@@ -4,7 +4,7 @@ const axios = require("axios");
 const app = express();
 const fs = require("fs");
 let db = [];
-const GITHUB_TOKEN = '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'; // Replace with your GitHub token
+const GITHUB_TOKEN = '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'; // Replace with your GitHub token
 const GITHUB_REPO = 'CosmosElement77/Weather-App'; // Replace with your GitHub username and repository name
 const GITHUB_FILE_PATH = 'Userdb.json'; // Path to the file in the repository
 
